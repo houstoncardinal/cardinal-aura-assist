@@ -4,7 +4,7 @@ import { ChatInterface } from "@/components/ChatInterface";
 const Index = () => {
   return (
     <ChatLayout>
-      <ChatInterface />
+      {({ mode, toolPrompt }) => <ChatInterface mode={mode} toolPrompt={toolPrompt} />}
     </ChatLayout>
   );
 };

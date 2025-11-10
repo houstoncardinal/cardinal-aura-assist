@@ -1,24 +1,25 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Sparkles } from "lucide-react";
+import { Send, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { streamChat, Message } from "@/lib/chat";
+import { IndustryMode } from "./ModeSelector";
+import { toast } from "@/hooks/use-toast";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
+interface ChatInterfaceProps {
+  mode: IndustryMode;
+  toolPrompt?: string;
 }
 
-export function ChatInterface() {
+export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I'm Cardinal GPT, your enterprise AI assistant. How can I help you today?",
+      content: "Hello! I'm Cardinal GPT. Select a mode above to get started with industry-specific tools and insights.",
       timestamp: new Date(),
     },
   ]);
@@ -32,6 +33,13 @@ export function ChatInterface() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (toolPrompt) {
+      setInput(toolPrompt + " ");
+      textareaRef.current?.focus();
+    }
+  }, [toolPrompt]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -47,17 +55,39 @@ export function ChatInterface() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "This is a simulated response. I'm here to help you with your questions and tasks. The actual AI integration will be connected to OpenAI GPT-5 and Google Gemini models.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 1000);
+    let assistantContent = "";
+    
+    await streamChat({
+      messages: [...messages, userMessage],
+      mode,
+      onDelta: (chunk) => {
+        assistantContent += chunk;
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant" && last.id === "streaming") {
+            return prev.map((m) =>
+              m.id === "streaming" ? { ...m, content: assistantContent } : m
+            );
+          }
+          return [...prev, { id: "streaming", role: "assistant", content: assistantContent, timestamp: new Date() }];
+        });
+      },
+      onDone: () => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === "streaming" ? { ...m, id: Date.now().toString() } : m))
+        );
+        setIsLoading(false);
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error,
+          variant: "destructive",
+        });
+        setMessages((prev) => prev.filter((m) => m.id !== "streaming"));
+        setIsLoading(false);
+      },
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -130,13 +160,6 @@ export function ChatInterface() {
       <div className="border-t border-border/50 glass-panel p-4">
         <div className="max-w-4xl mx-auto">
           <div className="relative flex items-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mb-2 hover:bg-muted/50"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
 
             <div className="flex-1 relative">
               <Textarea
@@ -156,7 +179,7 @@ export function ChatInterface() {
               size="icon"
               className="mb-2 h-10 w-10 glow-sm"
             >
-              <Send className="h-4 w-4" />
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
 

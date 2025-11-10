@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Plus, Settings, User, LogOut, Menu } from "lucide-react";
+import { MessageSquare, Plus, Settings, User, LogOut, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,17 +11,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { IndustryMode, ModeSelector, getModeName, getModeIcon } from "./ModeSelector";
+import { ToolPanel } from "./ToolPanel";
 
 interface ChatLayoutProps {
-  children: React.ReactNode;
+  children: (props: { mode: IndustryMode; toolPrompt?: string }) => React.ReactNode;
 }
 
 export function ChatLayout({ children }: ChatLayoutProps) {
+  const [selectedMode, setSelectedMode] = useState<IndustryMode>("general");
+  const [toolPrompt, setToolPrompt] = useState<string | undefined>();
+  const [showModeSelector, setShowModeSelector] = useState(true);
+  const [showToolPanel, setShowToolPanel] = useState(true);
   const [conversations] = useState([
     { id: "1", title: "Product Strategy Discussion", timestamp: "2 hours ago" },
     { id: "2", title: "Market Analysis Q4", timestamp: "Yesterday" },
     { id: "3", title: "Technical Architecture Review", timestamp: "3 days ago" },
   ]);
+
+  const ModeIcon = getModeIcon(selectedMode);
+
+  const handleToolSelect = (prompt: string) => {
+    setToolPrompt(prompt);
+    setTimeout(() => setToolPrompt(undefined), 100);
+  };
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -112,7 +125,49 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col lg:pt-0 pt-16">
-        {children}
+        {/* Mode Bar */}
+        <div className="border-b border-border/50 glass-panel">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowModeSelector(!showModeSelector)}
+                className="gap-2"
+              >
+                <ModeIcon className="h-4 w-4 text-primary" />
+                <span className="font-medium">{getModeName(selectedMode)}</span>
+                {showModeSelector ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowToolPanel(!showToolPanel)}
+              className="lg:flex hidden"
+            >
+              {showToolPanel ? "Hide Tools" : "Show Tools"}
+            </Button>
+          </div>
+
+          {showModeSelector && (
+            <div className="animate-fade-in-up">
+              <ModeSelector selectedMode={selectedMode} onModeChange={setSelectedMode} />
+            </div>
+          )}
+        </div>
+
+        {/* Chat + Tools */}
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1">
+            {children({ mode: selectedMode, toolPrompt })}
+          </div>
+          {showToolPanel && (
+            <aside className="hidden lg:block w-80 animate-slide-in-right">
+              <ToolPanel mode={selectedMode} onToolSelect={handleToolSelect} />
+            </aside>
+          )}
+        </div>
       </main>
     </div>
   );
