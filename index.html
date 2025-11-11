@@ -17,6 +17,15 @@
     <meta property="og:type" content="website" />
     
     <meta name="twitter:card" content="summary_large_image" />
+    
+    <script>
+      // Initialize theme before render to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
   </head>
 
   <body>

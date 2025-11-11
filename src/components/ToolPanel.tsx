@@ -93,8 +93,8 @@ export function ToolPanel({ mode, onToolSelect }: ToolPanelProps) {
   const tools = toolsByMode[mode];
 
   return (
-    <div className="h-full flex flex-col border-l border-border/50 glass-panel">
-      <div className="p-4 border-b border-border/50">
+    <div className="h-full flex flex-col luxury-border border-l">
+      <div className="p-4 luxury-border border-b">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
             Quick Tools
@@ -116,12 +116,12 @@ export function ToolPanel({ mode, onToolSelect }: ToolPanelProps) {
               <Button
                 key={tool.id}
                 variant="ghost"
-                className="w-full justify-start h-auto py-3 px-3 hover:bg-muted/50 group transition-all duration-200 hover:scale-[1.02]"
+                className="w-full justify-start h-auto py-3 px-3 hover:bg-muted/50 group transition-all duration-200 hover:scale-[1.01]"
                 onClick={() => onToolSelect(tool.action)}
               >
                 <div className="flex items-start gap-3 text-left w-full">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center flex-shrink-0 group-hover:from-primary/30 group-hover:to-accent/30 transition-all duration-200 group-hover:scale-110">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-all duration-200">
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

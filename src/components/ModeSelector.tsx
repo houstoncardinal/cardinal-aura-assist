@@ -95,34 +95,33 @@ export function ModeSelector({ selectedMode, onModeChange, className }: ModeSele
           const isSelected = selectedMode === mode.id;
 
           return (
-            <button
-              key={mode.id}
-              onClick={() => onModeChange(mode.id)}
-              className={cn(
-                "relative group p-4 rounded-xl border transition-all duration-300",
-                "hover:scale-105 hover:shadow-elevated",
-                isSelected
-                  ? "glass-panel border-primary/50 glow-sm"
-                  : "bg-card/50 border-border/50 hover:border-primary/30"
-              )}
-            >
-              <div
+              <button
+                key={mode.id}
+                onClick={() => onModeChange(mode.id)}
                 className={cn(
-                  "w-12 h-12 rounded-lg bg-gradient-to-br mb-3 flex items-center justify-center",
-                  "transition-transform group-hover:scale-110",
-                  mode.color
+                  "relative group p-4 rounded-xl border transition-all duration-300",
+                  "hover:scale-105 luxury-shadow hover:luxury-shadow-hover",
+                  isSelected
+                    ? "luxury-card border-primary/30 bg-primary/5"
+                    : "bg-card luxury-border hover:border-primary/20"
                 )}
               >
-                <Icon className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-sm mb-1 text-left">{mode.name}</h3>
-              <p className="text-xs text-muted-foreground text-left line-clamp-2">
-                {mode.description}
-              </p>
-              {isSelected && (
-                <div className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none animate-glow-pulse" />
-              )}
-            </button>
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-lg bg-primary/10 mb-3 flex items-center justify-center",
+                    "transition-transform group-hover:scale-110"
+                  )}
+                >
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1 text-left">{mode.name}</h3>
+                <p className="text-xs text-muted-foreground text-left line-clamp-2">
+                  {mode.description}
+                </p>
+                {isSelected && (
+                  <div className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none" />
+                )}
+              </button>
           );
         })}
       </div>

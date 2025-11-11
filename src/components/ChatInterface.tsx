@@ -111,12 +111,12 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
           {messages.length === 0 && (
             <div className="h-full flex items-center justify-center px-4 py-20">
               <div className="max-w-2xl text-center space-y-6 animate-fade-in-up">
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6 shadow-elevated">
-                  <ModeIcon className="h-10 w-10 text-primary" />
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6 luxury-shadow">
+                  <ModeIcon className="h-10 w-10" />
                 </div>
                 <div className="space-y-3">
                   <Badge variant="secondary" className="mb-2">{getModeName(mode)}</Badge>
-                  <h2 className="text-4xl font-bold text-gradient">
+                  <h2 className="text-4xl font-bold tracking-tight">
                     Welcome to Cardinal GPT
                   </h2>
                   <p className="text-muted-foreground text-lg">
@@ -159,10 +159,10 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
 
               <div
                 className={cn(
-                  "rounded-2xl px-5 py-4 max-w-[80%] shadow-elevated transition-all duration-200 hover:scale-[1.01]",
+                  "rounded-2xl px-5 py-4 max-w-[80%] luxury-shadow transition-all duration-200 hover:scale-[1.01]",
                   message.role === "user"
-                    ? "bg-gradient-to-br from-primary to-accent text-primary-foreground glow-sm"
-                    : "glass-panel bg-muted/30"
+                    ? "bg-primary text-primary-foreground"
+                    : "luxury-glass"
                 )}
               >
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -196,7 +196,7 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t border-border/50 glass-panel p-4">
+      <div className="luxury-border border-t p-4">
         <div className="max-w-4xl mx-auto">
           <div className="relative flex items-end gap-2">
 
@@ -207,7 +207,7 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask me anything..."
-                className="min-h-[52px] max-h-[200px] resize-none pr-12 glass-panel border-border/50 focus:border-primary/50 transition-colors"
+                className="min-h-[52px] max-h-[200px] resize-none pr-12 luxury-border focus:border-primary/50 transition-colors"
                 rows={1}
               />
             </div>
@@ -216,7 +216,7 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               size="icon"
-              className="mb-2 h-10 w-10 glow-sm"
+              className="mb-2 h-10 w-10 luxury-shadow hover:luxury-shadow-hover transition-all"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>

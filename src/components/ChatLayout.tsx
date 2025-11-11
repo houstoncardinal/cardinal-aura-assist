@@ -13,6 +13,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { IndustryMode, ModeSelector, getModeName, getModeIcon } from "./ModeSelector";
 import { ToolPanel } from "./ToolPanel";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface ChatLayoutProps {
   children: (props: { mode: IndustryMode; toolPrompt?: string }) => React.ReactNode;
@@ -39,36 +40,39 @@ export function ChatLayout({ children }: ChatLayoutProps) {
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border/50">
+      <div className="p-4 luxury-border border-b">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold text-gradient">Cardinal GPT</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <h1 className="text-xl font-bold tracking-tight">Cardinal GPT</h1>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-primary">C</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">C</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 glass-panel">
-              <DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 luxury-glass">
+              <DropdownMenuItem className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
 
-        <Button className="w-full justify-start glow-sm group" size="lg">
+        <Button className="w-full justify-start luxury-shadow hover:luxury-shadow-hover transition-all group" size="lg">
           <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
           New Conversation
         </Button>
@@ -101,14 +105,14 @@ export function ChatLayout({ children }: ChatLayoutProps) {
   );
 
   return (
-    <div className="flex h-screen bg-background gradient-mesh overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-80 border-r border-border/50 glass-panel">
+      <aside className="hidden lg:flex w-80 luxury-border border-r">
         <SidebarContent />
       </aside>
 
       {/* Mobile Header & Sidebar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 border-b border-border/50 glass-panel">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 luxury-border border-b luxury-glass">
         <div className="flex items-center justify-between p-4">
           <Sheet>
             <SheetTrigger asChild>
@@ -116,29 +120,29 @@ export function ChatLayout({ children }: ChatLayoutProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 p-0 glass-panel">
+            <SheetContent side="left" className="w-80 p-0 luxury-glass">
               <SidebarContent />
             </SheetContent>
           </Sheet>
-          <h1 className="text-lg font-semibold text-gradient">Cardinal GPT</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <h1 className="text-lg font-bold tracking-tight">Cardinal GPT</h1>
+          <ThemeToggle />
         </div>
       </div>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col lg:pt-0 pt-16">
         {/* Mode Bar */}
-        <div className="border-b border-border/50 glass-panel">
+        <div className="luxury-border border-b">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowModeSelector(!showModeSelector)}
-                className="gap-2 group hover:scale-105 transition-transform"
+                className="gap-2 group hover:scale-105 transition-all"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:from-primary/30 group-hover:to-accent/30 transition-all">
-                  <ModeIcon className="h-4 w-4 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                  <ModeIcon className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col items-start">
                   <span className="text-xs text-muted-foreground">Mode</span>
