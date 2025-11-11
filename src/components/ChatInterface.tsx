@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { streamChat, Message } from "@/lib/chat";
-import { IndustryMode } from "./ModeSelector";
+import { IndustryMode, getModeName, getModeIcon } from "./ModeSelector";
 import { toast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
@@ -14,19 +15,24 @@ interface ChatInterfaceProps {
   toolPrompt?: string;
 }
 
+const quickPromptsByMode: Record<IndustryMode, string[]> = {
+  general: ["Summarize this document", "Help me brainstorm ideas", "Analyze this data", "Draft an email"],
+  "real-estate": ["Create a property listing", "Analyze market trends", "Draft client outreach", "Generate CMA report"],
+  healthcare: ["Summarize patient records", "Research medical topics", "Document clinical notes", "Create care plan"],
+  education: ["Create lesson plan", "Design assessment", "Write student feedback", "Build learning activity"],
+  legal: ["Review this contract", "Research case law", "Draft legal memo", "Create due diligence checklist"],
+  finance: ["Analyze financials", "Create forecast", "Build financial model", "Evaluate investment"],
+  tech: ["Review this code", "Write documentation", "Design system architecture", "Debug this issue"],
+  hr: ["Write job description", "Create performance review", "Draft HR policy", "Design onboarding plan"],
+};
+
 export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hello! I'm Cardinal GPT. Select a mode above to get started with industry-specific tools and insights.",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const ModeIcon = getModeIcon(mode);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -102,6 +108,39 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
       {/* Messages Area */}
       <ScrollArea ref={scrollRef} className="flex-1 px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-6">
+          {messages.length === 0 && (
+            <div className="h-full flex items-center justify-center px-4 py-20">
+              <div className="max-w-2xl text-center space-y-6 animate-fade-in-up">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6 shadow-elevated">
+                  <ModeIcon className="h-10 w-10 text-primary" />
+                </div>
+                <div className="space-y-3">
+                  <Badge variant="secondary" className="mb-2">{getModeName(mode)}</Badge>
+                  <h2 className="text-4xl font-bold text-gradient">
+                    Welcome to Cardinal GPT
+                  </h2>
+                  <p className="text-muted-foreground text-lg">
+                    Your AI-powered workspace optimized for {getModeName(mode).toLowerCase()}. 
+                    Ask me anything or try one of these quick prompts to get started.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center pt-6">
+                  {quickPromptsByMode[mode].map((prompt) => (
+                    <Button
+                      key={prompt}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput(prompt)}
+                      className="hover:scale-105 transition-all hover:border-primary/50 hover:bg-primary/5"
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {messages.map((message) => (
             <div
               key={message.id}
@@ -120,10 +159,10 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
 
               <div
                 className={cn(
-                  "rounded-2xl px-4 py-3 max-w-[80%] shadow-elevated",
+                  "rounded-2xl px-5 py-4 max-w-[80%] shadow-elevated transition-all duration-200 hover:scale-[1.01]",
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground glow-sm"
-                    : "glass-panel"
+                    ? "bg-gradient-to-br from-primary to-accent text-primary-foreground glow-sm"
+                    : "glass-panel bg-muted/30"
                 )}
               >
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -184,7 +223,7 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
           </div>
 
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Powered by OpenAI GPT-5 & Google Gemini
+            Powered by OpenAI GPT-4o-mini • {getModeName(mode)} Mode
           </p>
         </div>
       </div>

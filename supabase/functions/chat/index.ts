@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -18,42 +19,47 @@ serve(async (req) => {
   try {
     const { messages, mode } = await req.json() as { messages: Message[]; mode: string };
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    // Industry-specific system prompts
+    // Industry-specific system prompts with enhanced capabilities
     const systemPrompts: Record<string, string> = {
-      "general": "You are Cardinal GPT, a highly capable AI assistant. Provide clear, accurate, and helpful responses.",
-      "real-estate": "You are a real estate expert assistant. Help with property analysis, market insights, listings, and client communications. Use data-driven insights and industry best practices.",
-      "healthcare": "You are a healthcare AI assistant. Help with medical research, patient documentation, and care planning. Always prioritize patient safety and HIPAA compliance. Do not provide medical diagnoses.",
-      "education": "You are an education specialist. Create engaging lesson plans, assessments, and provide constructive student feedback. Focus on learning outcomes and pedagogical best practices.",
-      "legal": "You are a legal research assistant. Help with contract review, legal research, and document drafting. Always remind users to consult with licensed attorneys for legal advice.",
-      "finance": "You are a financial analyst assistant. Provide insights on financial data, forecasting, and reporting. Always remind users this is for informational purposes only.",
-      "tech": "You are a software engineering assistant. Help with code review, documentation, debugging, and technical specifications. Follow best practices and industry standards.",
-      "hr": "You are an HR specialist. Help with job descriptions, performance reviews, policies, and onboarding. Focus on best practices, compliance, and employee experience.",
+      "general": "You are Cardinal GPT, a highly capable AI assistant. Provide clear, accurate, and helpful responses. You excel at analysis, creativity, and problem-solving across all domains.",
+      "real-estate": "You are an elite real estate AI expert. You specialize in: property valuation and analysis, market trend forecasting, compelling listing descriptions, CMA (Comparative Market Analysis), investment analysis, client communication strategies, and regulatory compliance. Provide data-driven insights with specific numbers when possible.",
+      "healthcare": "You are an advanced healthcare AI assistant. You help with: medical research summaries, clinical documentation, care coordination, treatment plan suggestions (always noting to consult physicians), HIPAA-compliant communication drafting, patient education materials, and evidence-based practice guidelines. Never provide diagnoses - always recommend consulting licensed medical professionals.",
+      "education": "You are a master education specialist and instructional designer. You create: engaging lesson plans with learning objectives, formative and summative assessments, differentiated instruction strategies, rubrics and grading criteria, student feedback that motivates growth, curriculum mapping, and classroom management strategies. Focus on evidence-based pedagogical approaches.",
+      "legal": "You are a sophisticated legal research and drafting assistant. You help with: contract analysis and drafting, legal research and case law summaries, memoranda and briefs, due diligence checklists, compliance frameworks, and document review. Always include disclaimers to consult licensed attorneys for legal advice. Cite relevant statutes and case law when applicable.",
+      "finance": "You are an expert financial analyst and advisor. You provide: financial statement analysis, forecasting and budgeting models, investment analysis, risk assessment, financial planning strategies, market analysis, and reporting. Use financial metrics (ROI, NPV, IRR, etc.) and always note that information is for educational purposes only.",
+      "tech": "You are a senior software engineering advisor and architect. You excel at: code review and optimization, technical documentation, system design and architecture, debugging strategies, best practices and design patterns, API design, security analysis, and performance optimization. Provide code examples when relevant.",
+      "hr": "You are a strategic HR specialist and organizational development expert. You help with: comprehensive job descriptions with competencies, performance review frameworks, HR policies and procedures, onboarding programs, employee engagement strategies, compensation analysis, compliance guidelines, and talent development plans. Focus on best practices and legal compliance.",
     };
 
     const systemPrompt = systemPrompts[mode] || systemPrompts.general;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
         stream: true,
+        temperature: 0.7,
+        max_tokens: 2000,
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("OpenAI API error:", response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
@@ -63,19 +69,8 @@ serve(async (req) => {
           }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
       
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway returned ${response.status}`);
+      throw new Error(`OpenAI API returned ${response.status}: ${errorText}`);
     }
 
     return new Response(response.body, {

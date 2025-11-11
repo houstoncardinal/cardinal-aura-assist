@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Plus, Settings, User, LogOut, Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, Plus, Settings, User, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -68,8 +68,8 @@ export function ChatLayout({ children }: ChatLayoutProps) {
           </DropdownMenu>
         </div>
 
-        <Button className="w-full justify-start glow-sm" size="lg">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button className="w-full justify-start glow-sm group" size="lg">
+          <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
           New Conversation
         </Button>
       </div>
@@ -80,10 +80,12 @@ export function ChatLayout({ children }: ChatLayoutProps) {
           {conversations.map((conv) => (
             <button
               key={conv.id}
-              className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted/50 transition-all duration-200 group"
+              className="w-full text-left px-3 py-3 rounded-lg hover:bg-muted/50 transition-all duration-200 group hover:scale-[1.02]"
             >
               <div className="flex items-start gap-3">
-                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 group-hover:text-primary transition-colors" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors">
                     {conv.title}
@@ -133,11 +135,16 @@ export function ChatLayout({ children }: ChatLayoutProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowModeSelector(!showModeSelector)}
-                className="gap-2"
+                className="gap-2 group hover:scale-105 transition-transform"
               >
-                <ModeIcon className="h-4 w-4 text-primary" />
-                <span className="font-medium">{getModeName(selectedMode)}</span>
-                {showModeSelector ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:from-primary/30 group-hover:to-accent/30 transition-all">
+                  <ModeIcon className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs text-muted-foreground">Mode</span>
+                  <span className="font-semibold text-sm">{getModeName(selectedMode)}</span>
+                </div>
+                {showModeSelector ? <ChevronLeft className="h-3 w-3 ml-2" /> : <ChevronRight className="h-3 w-3 ml-2" />}
               </Button>
             </div>
             <Button
