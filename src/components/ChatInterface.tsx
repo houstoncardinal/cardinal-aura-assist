@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Sparkles, Loader2, Mic, Paperclip, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { streamChat, Message } from "@/lib/chat";
 import { IndustryMode, getModeName, getModeIcon } from "./ModeSelector";
+import { MessageContent } from "./MessageContent";
+import { MessageActions } from "./MessageActions";
 import { toast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
@@ -15,15 +17,55 @@ interface ChatInterfaceProps {
   toolPrompt?: string;
 }
 
-const quickPromptsByMode: Record<IndustryMode, string[]> = {
-  general: ["Summarize this document", "Help me brainstorm ideas", "Analyze this data", "Draft an email"],
-  "real-estate": ["Create a property listing", "Analyze market trends", "Draft client outreach", "Generate CMA report"],
-  healthcare: ["Summarize patient records", "Research medical topics", "Document clinical notes", "Create care plan"],
-  education: ["Create lesson plan", "Design assessment", "Write student feedback", "Build learning activity"],
-  legal: ["Review this contract", "Research case law", "Draft legal memo", "Create due diligence checklist"],
-  finance: ["Analyze financials", "Create forecast", "Build financial model", "Evaluate investment"],
-  tech: ["Review this code", "Write documentation", "Design system architecture", "Debug this issue"],
-  hr: ["Write job description", "Create performance review", "Draft HR policy", "Design onboarding plan"],
+const quickPromptsByMode: Record<IndustryMode, { text: string; icon: string }[]> = {
+  general: [
+    { text: "Summarize this document for me", icon: "📄" },
+    { text: "Help me brainstorm creative ideas", icon: "💡" },
+    { text: "Analyze this data and provide insights", icon: "📊" },
+    { text: "Draft a professional email", icon: "✉️" },
+  ],
+  "real-estate": [
+    { text: "Create a compelling property listing", icon: "🏠" },
+    { text: "Analyze current market trends in my area", icon: "📈" },
+    { text: "Generate a CMA report for a property", icon: "📋" },
+    { text: "Draft a buyer/seller consultation script", icon: "🤝" },
+  ],
+  healthcare: [
+    { text: "Summarize patient records", icon: "📋" },
+    { text: "Research latest treatment protocols", icon: "🔬" },
+    { text: "Create patient education materials", icon: "📚" },
+    { text: "Draft a clinical documentation note", icon: "✍️" },
+  ],
+  education: [
+    { text: "Create an engaging lesson plan", icon: "📚" },
+    { text: "Design a comprehensive assessment", icon: "📝" },
+    { text: "Write constructive student feedback", icon: "💬" },
+    { text: "Build a differentiated learning activity", icon: "🎯" },
+  ],
+  legal: [
+    { text: "Review and analyze this contract", icon: "📜" },
+    { text: "Research relevant case law", icon: "⚖️" },
+    { text: "Draft a legal memorandum", icon: "📄" },
+    { text: "Create a due diligence checklist", icon: "✅" },
+  ],
+  finance: [
+    { text: "Analyze these financial statements", icon: "📊" },
+    { text: "Create a financial forecast model", icon: "📈" },
+    { text: "Evaluate this investment opportunity", icon: "💰" },
+    { text: "Build a detailed budget plan", icon: "🧮" },
+  ],
+  tech: [
+    { text: "Review and optimize this code", icon: "💻" },
+    { text: "Write comprehensive documentation", icon: "📝" },
+    { text: "Design system architecture", icon: "🏗️" },
+    { text: "Debug and troubleshoot this issue", icon: "🔧" },
+  ],
+  hr: [
+    { text: "Write a compelling job description", icon: "📋" },
+    { text: "Create a performance review template", icon: "⭐" },
+    { text: "Draft an HR policy document", icon: "📄" },
+    { text: "Design an onboarding program", icon: "🎓" },
+  ],
 };
 
 export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
@@ -47,24 +89,22 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
     }
   }, [toolPrompt]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-
+  const sendMessage = useCallback(async (messageContent: string, previousMessages: Message[]) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: messageContent,
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages([...previousMessages, userMessage]);
     setInput("");
     setIsLoading(true);
 
     let assistantContent = "";
     
     await streamChat({
-      messages: [...messages, userMessage],
+      messages: [...previousMessages, userMessage],
       mode,
       onDelta: (chunk) => {
         assistantContent += chunk;
@@ -94,13 +134,36 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
         setIsLoading(false);
       },
     });
+  }, [mode]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    await sendMessage(input, messages);
   };
+
+  const handleRegenerate = useCallback(async (messageIndex: number) => {
+    // Find the user message before this assistant message
+    const userMessageIndex = messageIndex - 1;
+    if (userMessageIndex < 0) return;
+    
+    const userMessage = messages[userMessageIndex];
+    if (userMessage.role !== "user") return;
+    
+    // Remove messages from this point onwards
+    const previousMessages = messages.slice(0, userMessageIndex);
+    await sendMessage(userMessage.content, previousMessages);
+  }, [messages, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleQuickPrompt = (prompt: string) => {
+    setInput(prompt);
+    textareaRef.current?.focus();
   };
 
   return (
@@ -124,16 +187,17 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
                     Ask me anything or try one of these quick prompts to get started.
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2 justify-center pt-6">
+                <div className="grid grid-cols-2 gap-3 pt-6 max-w-lg mx-auto">
                   {quickPromptsByMode[mode].map((prompt) => (
                     <Button
-                      key={prompt}
+                      key={prompt.text}
                       variant="outline"
                       size="sm"
-                      onClick={() => setInput(prompt)}
-                      className="hover:scale-105 transition-all hover:border-primary/50 hover:bg-primary/5"
+                      onClick={() => handleQuickPrompt(prompt.text)}
+                      className="h-auto py-3 px-4 flex items-center gap-2 hover:scale-105 transition-all hover:border-primary/50 hover:bg-primary/5 text-left justify-start"
                     >
-                      {prompt}
+                      <span className="text-base">{prompt.icon}</span>
+                      <span className="text-xs">{prompt.text}</span>
                     </Button>
                   ))}
                 </div>
@@ -141,49 +205,58 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
             </div>
           )}
           
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div
               key={message.id}
               className={cn(
-                "flex gap-4 animate-fade-in-up",
+                "flex gap-4 animate-fade-in-up group",
                 message.role === "user" ? "justify-end" : "justify-start"
               )}
             >
               {message.role === "assistant" && (
-                <Avatar className="h-8 w-8 border border-primary/20">
+                <Avatar className="h-8 w-8 border border-primary/20 flex-shrink-0">
                   <AvatarFallback className="bg-primary/10 text-primary">
                     <Sparkles className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
               )}
 
-              <div
-                className={cn(
-                  "rounded-2xl px-5 py-4 max-w-[80%] luxury-shadow transition-all duration-200 hover:scale-[1.01]",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "luxury-glass"
+              <div className="flex flex-col max-w-[80%]">
+                <div
+                  className={cn(
+                    "rounded-2xl px-5 py-4 luxury-shadow transition-all duration-200",
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "luxury-glass"
+                  )}
+                >
+                  <MessageContent content={message.content} isUser={message.role === "user"} />
+                </div>
+                {message.role === "assistant" && message.id !== "streaming" && (
+                  <MessageActions 
+                    content={message.content} 
+                    onRegenerate={() => handleRegenerate(index)}
+                    isLoading={isLoading}
+                  />
                 )}
-              >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
               </div>
 
               {message.role === "user" && (
-                <Avatar className="h-8 w-8 border border-muted">
+                <Avatar className="h-8 w-8 border border-muted flex-shrink-0">
                   <AvatarFallback className="bg-muted text-muted-foreground">U</AvatarFallback>
                 </Avatar>
               )}
             </div>
           ))}
 
-          {isLoading && (
+          {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex gap-4 animate-fade-in">
               <Avatar className="h-8 w-8 border border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary">
                   <Sparkles className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <div className="glass-panel rounded-2xl px-4 py-3">
+              <div className="luxury-glass rounded-2xl px-4 py-3">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
                   <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -195,10 +268,20 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="luxury-border border-t p-4">
+      {/* Enhanced Input Area */}
+      <div className="luxury-border border-t p-4 bg-background/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto">
-          <div className="relative flex items-end gap-2">
+          <div className="relative flex items-end gap-2 luxury-glass rounded-xl p-2">
+            <div className="flex gap-1 px-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                title="Attach file (coming soon)"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </div>
 
             <div className="flex-1 relative">
               <Textarea
@@ -206,25 +289,42 @@ export function ChatInterface({ mode, toolPrompt }: ChatInterfaceProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything..."
-                className="min-h-[52px] max-h-[200px] resize-none pr-12 luxury-border focus:border-primary/50 transition-colors"
+                placeholder="Ask Cardinal GPT anything..."
+                className="min-h-[48px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-2"
                 rows={1}
               />
             </div>
 
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              size="icon"
-              className="mb-2 h-10 w-10 luxury-shadow hover:luxury-shadow-hover transition-all"
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
+            <div className="flex gap-1 px-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                title="Voice input (coming soon)"
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                size="icon"
+                className="h-9 w-9 rounded-lg"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Powered by OpenAI GPT-4o-mini • {getModeName(mode)} Mode
-          </p>
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <p className="text-xs text-muted-foreground">
+              Powered by OpenAI GPT-4o-mini
+            </p>
+            <span className="text-muted-foreground/50">•</span>
+            <Badge variant="outline" className="text-xs">
+              <Wand2 className="h-3 w-3 mr-1" />
+              {getModeName(mode)} Mode
+            </Badge>
+          </div>
         </div>
       </div>
     </div>
