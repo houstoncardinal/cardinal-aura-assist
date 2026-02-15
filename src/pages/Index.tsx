@@ -4,7 +4,15 @@ import { ChatInterface } from "@/components/ChatInterface";
 const Index = () => {
   return (
     <ChatLayout>
-      {({ mode, toolPrompt }) => <ChatInterface mode={mode} toolPrompt={toolPrompt} />}
+      {({ mode, toolPrompt, messages, setMessages, onMessagesChange }) => (
+        <ChatInterface
+          mode={mode}
+          toolPrompt={toolPrompt}
+          messages={messages}
+          setMessages={setMessages}
+          onMessagesChange={onMessagesChange}
+        />
+      )}
     </ChatLayout>
   );
 };
