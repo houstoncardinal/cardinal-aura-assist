@@ -267,7 +267,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-6 max-w-lg mx-auto">
-                  {quickPromptsByMode[mode].map((prompt) => (
+                  {(quickPromptsByMode[mode] || quickPromptsByMode.general).map((prompt) => (
                     <Button
                       key={prompt.text}
                       variant="outline"
