@@ -1,4 +1,4 @@
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -22,52 +22,41 @@ export function MessageActions({ content, onRegenerate, isLoading }: MessageActi
 
   const handleFeedback = (type: "up" | "down") => {
     setFeedback(type);
-    toast({ 
-      description: type === "up" ? "Thanks for your feedback!" : "We'll work to improve" 
+    toast({
+      description: type === "up" ? "Thanks for your feedback!" : "We'll work to improve",
     });
   };
 
   return (
-    <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={handleCopy}
-      >
-        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+    <div className="flex items-center gap-0.5 mt-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={handleCopy}>
+        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
       </Button>
-      
+
       {onRegenerate && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={onRegenerate}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={onRegenerate} disabled={isLoading}>
+          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       )}
-      
-      <div className="h-4 w-px bg-border mx-1" />
-      
+
+      <div className="h-3 w-px bg-border mx-0.5" />
+
       <Button
         variant="ghost"
         size="icon"
-        className={`h-7 w-7 ${feedback === 'up' ? 'text-green-500' : ''}`}
+        className={`h-7 w-7 rounded-lg ${feedback === "up" ? "text-emerald-500" : ""}`}
         onClick={() => handleFeedback("up")}
       >
-        <ThumbsUp className="h-3.5 w-3.5" />
+        <ThumbsUp className="h-3 w-3" />
       </Button>
-      
+
       <Button
         variant="ghost"
         size="icon"
-        className={`h-7 w-7 ${feedback === 'down' ? 'text-red-500' : ''}`}
+        className={`h-7 w-7 rounded-lg ${feedback === "down" ? "text-destructive" : ""}`}
         onClick={() => handleFeedback("down")}
       >
-        <ThumbsDown className="h-3.5 w-3.5" />
+        <ThumbsDown className="h-3 w-3" />
       </Button>
     </div>
   );
