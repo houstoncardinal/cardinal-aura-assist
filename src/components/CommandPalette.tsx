@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   CommandDialog,
   CommandInput,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/command";
 import {
   Building2, Heart, GraduationCap, Code, TrendingUp, Scale, Users, Sparkles,
-  Sun, Moon, Plus, Image, FileText, Search, MessageSquare, Wand2,
+  Sun, Moon, Plus, Image, FileText, Search, Wand2,
 } from "lucide-react";
 import { IndustryMode } from "./ModeSelector";
 
@@ -24,15 +24,15 @@ interface CommandPaletteProps {
   currentTheme: "light" | "dark";
 }
 
-const modeItems: { id: IndustryMode; name: string; icon: React.ElementType }[] = [
-  { id: "general", name: "General", icon: Sparkles },
-  { id: "real-estate", name: "Real Estate", icon: Building2 },
-  { id: "healthcare", name: "Healthcare", icon: Heart },
-  { id: "education", name: "Education", icon: GraduationCap },
-  { id: "legal", name: "Legal", icon: Scale },
-  { id: "finance", name: "Finance", icon: TrendingUp },
-  { id: "tech", name: "Technology", icon: Code },
-  { id: "hr", name: "Human Resources", icon: Users },
+const modeItems: { id: IndustryMode; name: string; icon: React.ElementType; emoji: string }[] = [
+  { id: "general", name: "General", icon: Sparkles, emoji: "✨" },
+  { id: "real-estate", name: "Real Estate", icon: Building2, emoji: "🏠" },
+  { id: "healthcare", name: "Healthcare", icon: Heart, emoji: "🏥" },
+  { id: "education", name: "Education", icon: GraduationCap, emoji: "🎓" },
+  { id: "legal", name: "Legal", icon: Scale, emoji: "⚖️" },
+  { id: "finance", name: "Finance", icon: TrendingUp, emoji: "💹" },
+  { id: "tech", name: "Technology", icon: Code, emoji: "💻" },
+  { id: "hr", name: "Human Resources", icon: Users, emoji: "👥" },
 ];
 
 const quickActions = [
@@ -64,7 +64,7 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Type a command or search..." />
+      <CommandInput placeholder="Search commands, modes, tools..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
@@ -96,15 +96,12 @@ export function CommandPalette({
         <CommandSeparator />
 
         <CommandGroup heading="Switch Mode">
-          {modeItems.map((mode) => {
-            const Icon = mode.icon;
-            return (
-              <CommandItem key={mode.id} onSelect={() => { onModeChange(mode.id); onOpenChange(false); }}>
-                <Icon className="mr-2 h-4 w-4" />
-                {mode.name}
-              </CommandItem>
-            );
-          })}
+          {modeItems.map((mode) => (
+            <CommandItem key={mode.id} onSelect={() => { onModeChange(mode.id); onOpenChange(false); }}>
+              <span className="mr-2">{mode.emoji}</span>
+              {mode.name}
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

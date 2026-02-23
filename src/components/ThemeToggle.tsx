@@ -14,11 +14,9 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const root = window.document.documentElement;
     const newTheme = theme === "light" ? "dark" : "light";
-    
     root.classList.remove(theme);
     root.classList.add(newTheme);
     setTheme(newTheme);
-    
     localStorage.setItem("theme", newTheme);
   };
 
@@ -27,12 +25,12 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="rounded-full luxury-border hover:luxury-shadow transition-all duration-300 group"
+      className="h-8 w-8 rounded-xl glass-subtle hover:scale-105 transition-all duration-300 group"
     >
       {theme === "light" ? (
-        <Moon className="h-5 w-5 transition-transform group-hover:rotate-12" />
+        <Moon className="h-4 w-4 transition-transform group-hover:rotate-12" />
       ) : (
-        <Sun className="h-5 w-5 transition-transform group-hover:rotate-12" />
+        <Sun className="h-4 w-4 transition-transform group-hover:rotate-12" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

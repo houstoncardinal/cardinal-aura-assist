@@ -1,9 +1,8 @@
 import { Building2, Heart, GraduationCap, Code, TrendingUp, Scale, Users, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-export type IndustryMode = 
+export type IndustryMode =
   | "general"
   | "real-estate"
   | "healthcare"
@@ -17,67 +16,19 @@ interface Mode {
   id: IndustryMode;
   name: string;
   icon: React.ElementType;
-  color: string;
+  emoji: string;
   description: string;
 }
 
 const modes: Mode[] = [
-  {
-    id: "general",
-    name: "General",
-    icon: Sparkles,
-    color: "from-primary to-accent",
-    description: "All-purpose AI assistant",
-  },
-  {
-    id: "real-estate",
-    name: "Real Estate",
-    icon: Building2,
-    color: "from-blue-500 to-cyan-500",
-    description: "Property analysis, market insights, client outreach",
-  },
-  {
-    id: "healthcare",
-    name: "Healthcare",
-    icon: Heart,
-    color: "from-red-500 to-pink-500",
-    description: "Patient summaries, medical research, documentation",
-  },
-  {
-    id: "education",
-    name: "Education",
-    icon: GraduationCap,
-    color: "from-purple-500 to-violet-500",
-    description: "Lesson plans, assessments, student feedback",
-  },
-  {
-    id: "legal",
-    name: "Legal",
-    icon: Scale,
-    color: "from-amber-500 to-orange-500",
-    description: "Contract review, legal research, case analysis",
-  },
-  {
-    id: "finance",
-    name: "Finance",
-    icon: TrendingUp,
-    color: "from-green-500 to-emerald-500",
-    description: "Market analysis, financial modeling, reporting",
-  },
-  {
-    id: "tech",
-    name: "Technology",
-    icon: Code,
-    color: "from-indigo-500 to-blue-500",
-    description: "Code review, documentation, technical specs",
-  },
-  {
-    id: "hr",
-    name: "Human Resources",
-    icon: Users,
-    color: "from-pink-500 to-rose-500",
-    description: "Job descriptions, performance reviews, policies",
-  },
+  { id: "general", name: "General", icon: Sparkles, emoji: "✨", description: "All-purpose AI assistant" },
+  { id: "real-estate", name: "Real Estate", icon: Building2, emoji: "🏠", description: "Property & market intelligence" },
+  { id: "healthcare", name: "Healthcare", icon: Heart, emoji: "🏥", description: "Clinical & patient support" },
+  { id: "education", name: "Education", icon: GraduationCap, emoji: "🎓", description: "Teaching & curriculum tools" },
+  { id: "legal", name: "Legal", icon: Scale, emoji: "⚖️", description: "Contract & case analysis" },
+  { id: "finance", name: "Finance", icon: TrendingUp, emoji: "💹", description: "Financial modeling & analysis" },
+  { id: "tech", name: "Technology", icon: Code, emoji: "💻", description: "Code review & architecture" },
+  { id: "hr", name: "Human Resources", icon: Users, emoji: "👥", description: "Talent & policy management" },
 ];
 
 interface ModeSelectorProps {
@@ -89,39 +40,31 @@ interface ModeSelectorProps {
 export function ModeSelector({ selectedMode, onModeChange, className }: ModeSelectorProps) {
   return (
     <ScrollArea className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4">
         {modes.map((mode) => {
-          const Icon = mode.icon;
           const isSelected = selectedMode === mode.id;
 
           return (
-              <button
-                key={mode.id}
-                onClick={() => onModeChange(mode.id)}
-                className={cn(
-                  "relative group p-4 rounded-xl border transition-all duration-300",
-                  "hover:scale-105 luxury-shadow hover:luxury-shadow-hover",
-                  isSelected
-                    ? "luxury-card border-primary/30 bg-primary/5"
-                    : "bg-card luxury-border hover:border-primary/20"
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-lg bg-primary/10 mb-3 flex items-center justify-center",
-                    "transition-transform group-hover:scale-110"
-                  )}
-                >
-                  <Icon className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-sm mb-1 text-left">{mode.name}</h3>
-                <p className="text-xs text-muted-foreground text-left line-clamp-2">
-                  {mode.description}
-                </p>
-                {isSelected && (
-                  <div className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none" />
-                )}
-              </button>
+            <button
+              key={mode.id}
+              onClick={() => onModeChange(mode.id)}
+              className={cn(
+                "relative group p-3 sm:p-4 rounded-xl transition-all duration-300 text-left",
+                "hover:scale-[1.03] active:scale-[0.98]",
+                isSelected
+                  ? "glass bg-primary/5 ring-1 ring-primary/20"
+                  : "glass-subtle hover:bg-muted/50"
+              )}
+            >
+              <span className="text-xl sm:text-2xl block mb-2">{mode.emoji}</span>
+              <h3 className="font-semibold text-xs sm:text-sm mb-0.5">{mode.name}</h3>
+              <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
+                {mode.description}
+              </p>
+              {isSelected && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary/60" />
+              )}
+            </button>
           );
         })}
       </div>
