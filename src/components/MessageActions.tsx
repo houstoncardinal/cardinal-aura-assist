@@ -1,7 +1,8 @@
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Download } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 interface MessageActionsProps {
   content: string;
@@ -28,7 +29,12 @@ export function MessageActions({ content, onRegenerate, isLoading }: MessageActi
   };
 
   return (
-    <div className="flex items-center gap-0.5 mt-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: 0.1 }}
+      className="flex items-center gap-0.5 mt-1.5 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200"
+    >
       <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={handleCopy}>
         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
       </Button>
@@ -58,6 +64,6 @@ export function MessageActions({ content, onRegenerate, isLoading }: MessageActi
       >
         <ThumbsDown className="h-3 w-3" />
       </Button>
-    </div>
+    </motion.div>
   );
 }
