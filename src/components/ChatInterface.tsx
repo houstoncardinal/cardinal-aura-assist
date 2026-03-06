@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Sparkles, Loader2, Paperclip, Image as ImageIcon, X, ArrowUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Paperclip, Image as ImageIcon, X, ArrowUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +11,10 @@ import { generateImage } from "@/lib/image-gen";
 import { IndustryMode, getModeName, getModeIcon } from "./ModeSelector";
 import { MessageContent } from "./MessageContent";
 import { MessageActions } from "./MessageActions";
+import { AIAvatar } from "./AIAvatar";
+import { VoiceInput } from "./VoiceInput";
+import { SmartSuggestions } from "./SmartSuggestions";
+import { playSound } from "@/lib/sounds";
 import { toast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
@@ -71,6 +76,26 @@ const quickPromptsByMode: Record<IndustryMode, { text: string; icon: string; lab
   ],
 };
 
+async function readFileContents(files: File[]): Promise<string> {
+  const parts: string[] = [];
+  for (const file of files) {
+    if (
+      file.type.startsWith("text/") ||
+      /\.(txt|md|csv|json|xml|html|css|js|ts|tsx|py|rb|go|rs|java|yaml|toml)$/i.test(file.name)
+    ) {
+      try {
+        const text = await file.text();
+        parts.push(`--- File: ${file.name} ---\n${text.slice(0, 8000)}\n--- End of ${file.name} ---`);
+      } catch {
+        parts.push(`[Attached file: ${file.name} — could not read]`);
+      }
+    } else {
+      parts.push(`[Attached file: ${file.name} (${file.type || "unknown type"}, ${(file.size / 1024).toFixed(1)}KB)]`);
+    }
+  }
+  return parts.join("\n\n");
+}
+
 export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessagesChange }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -105,12 +130,12 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
       content: `🎨 Generate image: ${prompt}`,
       timestamp: new Date(),
     };
-
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
     setGeneratingImage(true);
     setIsLoading(true);
+    playSound("send");
 
     try {
       const result = await generateImage({ prompt });
@@ -123,12 +148,10 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
       const finalMessages = [...newMessages, assistantMessage];
       setMessages(finalMessages);
       onMessagesChange?.(finalMessages);
+      playSound("receive");
     } catch (error) {
-      toast({
-        title: "Image Generation Failed",
-        description: error instanceof Error ? error.message : "Failed to generate image",
-        variant: "destructive",
-      });
+      toast({ title: "Image Generation Failed", description: error instanceof Error ? error.message : "Failed to generate image", variant: "destructive" });
+      playSound("error");
     } finally {
       setGeneratingImage(false);
       setIsLoading(false);
@@ -141,9 +164,10 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
       return;
     }
 
-    const fileContext = attachedFiles.length > 0
-      ? `\n\n[Attached files: ${attachedFiles.map(f => f.name).join(", ")}]`
-      : "";
+    let fileContext = "";
+    if (attachedFiles.length > 0) {
+      fileContext = "\n\n" + (await readFileContents(attachedFiles));
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -157,6 +181,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
     setInput("");
     setAttachedFiles([]);
     setIsLoading(true);
+    playSound("send");
 
     let assistantContent = "";
 
@@ -168,9 +193,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && last.id === "streaming") {
-            return prev.map((m) =>
-              m.id === "streaming" ? { ...m, content: assistantContent } : m
-            );
+            return prev.map((m) => (m.id === "streaming" ? { ...m, content: assistantContent } : m));
           }
           return [...prev, { id: "streaming", role: "assistant", content: assistantContent, timestamp: new Date() }];
         });
@@ -182,11 +205,13 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
           return final;
         });
         setIsLoading(false);
+        playSound("receive");
       },
       onError: (error) => {
         toast({ title: "Error", description: error, variant: "destructive" });
         setMessages((prev) => prev.filter((m) => m.id !== "streaming"));
         setIsLoading(false);
+        playSound("error");
       },
     });
   }, [mode, isImageMode, attachedFiles, handleImageGeneration, setMessages, onMessagesChange]);
@@ -221,16 +246,14 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
   };
 
   const handleFileAttach = () => fileInputRef.current?.click();
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachedFiles((prev) => [...prev, ...files].slice(0, 5));
     e.target.value = "";
   };
+  const removeFile = (index: number) => setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
 
-  const removeFile = (index: number) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  const lastAssistant = messages.filter((m) => m.role === "assistant" && m.id !== "streaming").pop();
 
   return (
     <div className="flex flex-col h-full relative">
@@ -244,120 +267,173 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
       <ScrollArea ref={scrollRef} className="flex-1 px-3 sm:px-4 py-4 sm:py-6 relative z-10">
         <div className="max-w-3xl mx-auto space-y-5">
           {/* Welcome State */}
-          {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center px-2 sm:px-4 py-12 sm:py-20">
-              <div className="max-w-xl w-full text-center space-y-8 animate-fade-in-up">
-                {/* Logo orb */}
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto">
-                  <div className="absolute inset-0 rounded-3xl bg-primary/5 animate-pulse-soft" />
-                  <div className="absolute inset-2 glass rounded-2xl flex items-center justify-center glow-border">
-                    <ModeIcon className="h-10 w-10 sm:h-12 sm:w-12 text-foreground/80" />
-                  </div>
-                </div>
+          <AnimatePresence>
+            {messages.length === 0 && (
+              <motion.div
+                key="welcome"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="h-full flex items-center justify-center px-2 sm:px-4 py-12 sm:py-20"
+              >
+                <div className="max-w-xl w-full text-center space-y-8 relative">
+                  {/* Aurora effect */}
+                  <div className="aurora" />
 
-                <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-4 py-1.5 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
-                    <span className="text-xs font-medium text-muted-foreground">{getModeName(mode)} Mode</span>
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight font-display">
-                    Cardinal GPT
-                  </h1>
-                  <p className="text-muted-foreground text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
-                    Enterprise AI workspace. Generate text, images, and insights with industry-tuned intelligence.
-                  </p>
-                </div>
+                  {/* Logo orb */}
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                    className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto"
+                  >
+                    <div className="absolute inset-0 rounded-3xl bg-primary/5 animate-pulse-soft" />
+                    <div className="absolute inset-2 glass rounded-2xl flex items-center justify-center glow-border">
+                      <ModeIcon className="h-10 w-10 sm:h-12 sm:w-12 text-foreground/80" />
+                    </div>
+                  </motion.div>
 
-                {/* Quick action cards */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-4 max-w-md mx-auto">
-                  {(quickPromptsByMode[mode] || quickPromptsByMode.general).map((prompt) => (
-                    <button
-                      key={prompt.text}
-                      onClick={() => handleQuickPrompt(prompt.text)}
-                      className="glass-card group p-3 sm:p-4 rounded-xl text-left transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
-                    >
-                      <span className="text-xl sm:text-2xl block mb-2">{prompt.icon}</span>
-                      <span className="text-xs sm:text-sm font-medium text-foreground/90 block">{prompt.label}</span>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 mt-0.5">{prompt.text}</span>
-                    </button>
-                  ))}
-                </div>
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="space-y-3"
+                  >
+                    <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-4 py-1.5 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
+                      <span className="text-xs font-medium text-muted-foreground">{getModeName(mode)} Mode</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight font-display">
+                      Cardinal GPT
+                    </h1>
+                    <p className="text-muted-foreground text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
+                      Enterprise AI workspace. Generate text, images, and insights with industry-tuned intelligence.
+                    </p>
+                  </motion.div>
 
-                <div className="flex items-center justify-center gap-4 pt-2">
-                  <kbd className="glass-subtle rounded-lg px-2.5 py-1 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
-                  <span className="text-[10px] text-muted-foreground">Command palette</span>
+                  {/* Quick action cards */}
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                    className="grid grid-cols-2 gap-2 sm:gap-3 pt-4 max-w-md mx-auto"
+                  >
+                    {(quickPromptsByMode[mode] || quickPromptsByMode.general).map((prompt, i) => (
+                      <motion.button
+                        key={prompt.text}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 + i * 0.08 }}
+                        whileHover={{ scale: 1.03, y: -2 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleQuickPrompt(prompt.text)}
+                        className="glass-card group p-3 sm:p-4 rounded-xl text-left"
+                      >
+                        <span className="text-xl sm:text-2xl block mb-2">{prompt.icon}</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground/90 block">{prompt.label}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 mt-0.5">{prompt.text}</span>
+                      </motion.button>
+                    ))}
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="flex items-center justify-center gap-4 pt-2"
+                  >
+                    <kbd className="glass-subtle rounded-lg px-2.5 py-1 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
+                    <span className="text-[10px] text-muted-foreground">Command palette</span>
+                    <kbd className="glass-subtle rounded-lg px-2.5 py-1 text-[10px] font-mono text-muted-foreground">?</kbd>
+                    <span className="text-[10px] text-muted-foreground">Shortcuts</span>
+                  </motion.div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Messages */}
-          {messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex gap-3 animate-fade-in-up group",
-                message.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              {message.role === "assistant" && (
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl glass flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles className="h-4 w-4 text-foreground/70" />
-                </div>
-              )}
-
-              <div className="flex flex-col max-w-[85%] sm:max-w-[75%]">
-                <div
-                  className={cn(
-                    "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 transition-all duration-200",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "glass rounded-bl-md"
-                  )}
-                >
-                  <MessageContent content={message.content} isUser={message.role === "user"} />
-                </div>
-                {message.role === "assistant" && message.id !== "streaming" && (
-                  <MessageActions
-                    content={message.content}
-                    onRegenerate={() => handleRegenerate(index)}
-                    isLoading={isLoading}
-                  />
+          <AnimatePresence mode="popLayout">
+            {messages.map((message, index) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className={cn(
+                  "flex gap-3 group",
+                  message.role === "user" ? "justify-end" : "justify-start"
                 )}
-              </div>
+              >
+                {message.role === "assistant" && (
+                  <AIAvatar isThinking={message.id === "streaming"} />
+                )}
 
-              {message.role === "user" && (
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-xs font-semibold text-foreground/70">U</span>
+                <div className="flex flex-col max-w-[85%] sm:max-w-[75%]">
+                  <motion.div
+                    initial={{ scale: 0.97 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className={cn(
+                      "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 transition-all duration-200",
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-br-md"
+                        : "glass rounded-bl-md"
+                    )}
+                  >
+                    <MessageContent
+                      content={message.content}
+                      isUser={message.role === "user"}
+                      isStreaming={message.id === "streaming"}
+                    />
+                  </motion.div>
+                  {message.role === "assistant" && message.id !== "streaming" && (
+                    <MessageActions
+                      content={message.content}
+                      onRegenerate={() => handleRegenerate(index)}
+                      isLoading={isLoading}
+                    />
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
 
-          {/* Loading indicator */}
+                {message.role === "user" && (
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="text-xs font-semibold text-foreground/70">U</span>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Smart Suggestions */}
+          {lastAssistant && !isLoading && (
+            <SmartSuggestions content={lastAssistant.content} mode={mode} onSelect={handleQuickPrompt} />
+          )}
+
+          {/* Skeleton loading */}
           {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div className="flex gap-3 animate-fade-in">
-              <div className="w-9 h-9 rounded-xl glass flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-foreground/70" />
-              </div>
-              <div className="glass rounded-2xl rounded-bl-md px-5 py-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-3"
+            >
+              <AIAvatar isThinking size="sm" />
+              <div className="glass rounded-2xl rounded-bl-md px-5 py-4 min-w-[200px]">
                 {generatingImage ? (
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-4 w-4 animate-pulse" />
                     <span className="text-xs text-muted-foreground">Creating your image...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
-                    <span className="text-xs text-muted-foreground">Thinking...</span>
+                  <div className="space-y-2.5">
+                    <div className="h-3 w-48 bg-muted/60 rounded-full shimmer" />
+                    <div className="h-3 w-36 bg-muted/40 rounded-full shimmer" />
+                    <div className="h-3 w-52 bg-muted/50 rounded-full shimmer" />
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </ScrollArea>
@@ -366,22 +442,37 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
       <div className="relative z-10 p-3 sm:p-4 pb-4 sm:pb-6">
         <div className="max-w-3xl mx-auto">
           {/* Attached files */}
-          {attachedFiles.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2 px-1">
-              {attachedFiles.map((file, i) => (
-                <div key={i} className="glass-subtle rounded-lg flex items-center gap-2 px-3 py-1.5">
-                  <Paperclip className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs max-w-[100px] truncate">{file.name}</span>
-                  <button onClick={() => removeFile(i)} className="hover:bg-muted rounded-full p-0.5 transition-colors">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {attachedFiles.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex flex-wrap gap-2 mb-2 px-1"
+              >
+                {attachedFiles.map((file, i) => (
+                  <motion.div
+                    key={file.name + i}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    className="glass-subtle rounded-lg flex items-center gap-2 px-3 py-1.5"
+                  >
+                    <Paperclip className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs max-w-[100px] truncate">{file.name}</span>
+                    <button onClick={() => removeFile(i)} className="hover:bg-muted rounded-full p-0.5 transition-colors">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="glass-strong rounded-2xl p-2 transition-all duration-300 focus-within:shadow-lg">
-            {/* Mode indicator inside input */}
+          <motion.div
+            layout
+            className="glass-strong rounded-2xl p-2 transition-all duration-300 focus-within:shadow-lg"
+          >
             {isImageMode && (
               <div className="flex items-center gap-2 px-3 pb-1">
                 <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 gap-1 h-5">
@@ -399,7 +490,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   multiple
                   className="hidden"
                   onChange={handleFileChange}
-                  accept=".txt,.pdf,.doc,.docx,.csv,.json,.md,.png,.jpg,.jpeg,.gif,.webp"
+                  accept=".txt,.pdf,.doc,.docx,.csv,.json,.md,.png,.jpg,.jpeg,.gif,.webp,.xml,.html,.css,.js,.ts,.tsx,.py,.rb,.go"
                 />
                 <Button
                   variant="ghost"
@@ -414,14 +505,13 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   size="icon"
                   className={cn(
                     "h-8 w-8 rounded-lg transition-colors",
-                    isImageMode
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground"
+                    isImageMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                   )}
                   onClick={() => setIsImageMode(!isImageMode)}
                 >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
+                <VoiceInput onTranscript={(t) => setInput(t)} disabled={isLoading} />
               </div>
 
               <Textarea
@@ -441,19 +531,15 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   size="icon"
                   className="h-9 w-9 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowUp className="h-4 w-4" />
-                  )}
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <div className="flex items-center justify-center gap-3 mt-2.5">
             <p className="text-[10px] text-muted-foreground/60">
-              Powered by OpenAI {isImageMode ? "DALL·E 3" : "GPT-4o-mini"}
+              Cardinal GPT • Enterprise AI Platform
             </p>
           </div>
         </div>

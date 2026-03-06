@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Building2, Heart, GraduationCap, Code, TrendingUp, Scale, Users, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -41,16 +42,20 @@ export function ModeSelector({ selectedMode, onModeChange, className }: ModeSele
   return (
     <ScrollArea className={cn("w-full", className)}>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4">
-        {modes.map((mode) => {
+        {modes.map((mode, i) => {
           const isSelected = selectedMode === mode.id;
 
           return (
-            <button
+            <motion.button
               key={mode.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04, duration: 0.25 }}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onModeChange(mode.id)}
               className={cn(
                 "relative group p-3 sm:p-4 rounded-xl transition-all duration-300 text-left",
-                "hover:scale-[1.03] active:scale-[0.98]",
                 isSelected
                   ? "glass bg-primary/5 ring-1 ring-primary/20"
                   : "glass-subtle hover:bg-muted/50"
@@ -62,9 +67,13 @@ export function ModeSelector({ selectedMode, onModeChange, className }: ModeSele
                 {mode.description}
               </p>
               {isSelected && (
-                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary/60" />
+                <motion.div
+                  layoutId="mode-indicator"
+                  className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary/60"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>

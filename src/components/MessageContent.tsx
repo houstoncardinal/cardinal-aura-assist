@@ -1,12 +1,35 @@
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { Copy, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface MessageContentProps {
   content: string;
   isUser?: boolean;
+  isStreaming?: boolean;
 }
 
-export function MessageContent({ content, isUser }: MessageContentProps) {
+function CodeCopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    toast({ description: "Code copied!" });
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute top-2 right-2 glass-subtle rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/60"
+      title="Copy code"
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+    </button>
+  );
+}
+
+export function MessageContent({ content, isUser, isStreaming }: MessageContentProps) {
   if (isUser) {
     return <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>;
   }
@@ -23,6 +46,17 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
           h2: ({ children }) => <h2 className="text-base font-display font-bold mb-2 mt-3">{children}</h2>,
           h3: ({ children }) => <h3 className="text-sm font-display font-bold mb-1.5 mt-2">{children}</h3>,
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors inline-flex items-center gap-0.5"
+            >
+              {children}
+              <ExternalLink className="h-3 w-3 inline-block" />
+            </a>
+          ),
           code: ({ className, children, ...props }) => {
             const isInline = !className;
             if (isInline) {
@@ -32,19 +66,29 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
                 </code>
               );
             }
+            const codeString = String(children).replace(/\n$/, "");
+            const lang = className?.replace("language-", "") || "";
             return (
-              <code
-                className={cn(
-                  "block bg-muted/40 p-4 rounded-xl text-xs font-mono overflow-x-auto my-3 border border-border/50",
-                  className
+              <div className="relative group my-3">
+                {lang && (
+                  <div className="absolute top-0 left-0 glass-subtle rounded-tl-xl rounded-br-lg px-2.5 py-1 text-[9px] font-mono text-muted-foreground/60 uppercase">
+                    {lang}
+                  </div>
                 )}
-                {...props}
-              >
-                {children}
-              </code>
+                <CodeCopyButton code={codeString} />
+                <code
+                  className={cn(
+                    "block bg-muted/40 p-4 pt-8 rounded-xl text-xs font-mono overflow-x-auto border border-border/50",
+                    className
+                  )}
+                  {...props}
+                >
+                  {children}
+                </code>
+              </div>
             );
           },
-          pre: ({ children }) => <pre className="rounded-xl overflow-hidden my-3">{children}</pre>,
+          pre: ({ children }) => <pre className="rounded-xl overflow-hidden">{children}</pre>,
           table: ({ children }) => (
             <div className="overflow-x-auto my-3 rounded-xl border border-border/50">
               <table className="min-w-full border-collapse text-xs">{children}</table>
@@ -62,17 +106,25 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
             </blockquote>
           ),
           img: ({ src, alt }) => (
-            <img
-              src={src}
-              alt={alt || "Generated image"}
-              className="rounded-xl max-w-full my-3 shadow-lg"
-              loading="lazy"
-            />
+            <div className="my-3 rounded-xl overflow-hidden border border-border/30 shadow-lg">
+              <img
+                src={src}
+                alt={alt || "Generated image"}
+                className="max-w-full w-full"
+                loading="lazy"
+              />
+              {alt && alt !== "Generated image" && (
+                <div className="px-3 py-2 glass-subtle text-[10px] text-muted-foreground">
+                  {alt}
+                </div>
+              )}
+            </div>
           ),
         }}
       >
         {content}
       </ReactMarkdown>
+      {isStreaming && <span className="typing-cursor" />}
     </div>
   );
 }
