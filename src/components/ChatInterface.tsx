@@ -14,6 +14,8 @@ import { MessageActions } from "./MessageActions";
 import { AIAvatar } from "./AIAvatar";
 import { VoiceInput } from "./VoiceInput";
 import { SmartSuggestions } from "./SmartSuggestions";
+import { NeuralNetwork } from "./NeuralNetwork";
+import { DeepThinkToggle } from "./DeepThinkToggle";
 import { playSound } from "@/lib/sounds";
 import { toast } from "@/hooks/use-toast";
 
