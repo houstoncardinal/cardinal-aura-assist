@@ -499,7 +499,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
             )}
 
             <div className="flex items-end gap-2">
-              <div className="flex gap-0.5 px-1">
+              <div className="flex gap-0.5 px-1 items-center">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -528,6 +528,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   <ImageIcon className="h-4 w-4" />
                 </Button>
                 <VoiceInput onTranscript={(t) => setInput(t)} disabled={isLoading} />
+                <DeepThinkToggle enabled={deepThink} onToggle={() => setDeepThink(!deepThink)} disabled={isLoading} />
               </div>
 
               <Textarea
