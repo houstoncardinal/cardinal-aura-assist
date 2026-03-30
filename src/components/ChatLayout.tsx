@@ -374,23 +374,34 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col lg:pt-0 pt-[52px]">
-        {/* Top toolbar */}
+        {/* Mode selector - always visible */}
         <div className="glass-subtle border-b border-border/30">
-          <div className="flex items-center justify-between px-3 sm:px-4 py-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowModeSelector(!showModeSelector)}
-              className="gap-2 group rounded-xl h-9 hover:bg-primary/5 transition-all"
-            >
-              <div className="w-7 h-7 rounded-lg glass flex items-center justify-center group-hover:scale-105 transition-transform">
-                <ModeIcon className="h-3.5 w-3.5" />
-              </div>
-              <span className="font-medium text-sm hidden sm:inline">{getModeName(selectedMode)}</span>
-              <span className="font-medium text-xs sm:hidden">{getModeName(selectedMode)}</span>
-            </Button>
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 overflow-x-auto scrollbar-none">
+            {/* Mode pills - horizontally scrollable */}
+            {(["general", "real-estate", "healthcare", "education", "legal", "finance", "tech", "hr"] as IndustryMode[]).map((modeId) => {
+              const Icon = getModeIcon(modeId);
+              const isSelected = selectedMode === modeId;
+              return (
+                <motion.button
+                  key={modeId}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setSelectedMode(modeId)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0",
+                    isSelected
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "glass-subtle text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  <span>{getModeName(modeId)}</span>
+                </motion.button>
+              );
+            })}
 
-            <div className="flex items-center gap-1">
+            {/* Spacer + actions */}
+            <div className="ml-auto flex items-center gap-1 flex-shrink-0 pl-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -409,25 +420,6 @@ export function ChatLayout({ children }: ChatLayoutProps) {
               </Button>
             </div>
           </div>
-
-          <AnimatePresence>
-            {showModeSelector && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ModeSelector
-                  selectedMode={selectedMode}
-                  onModeChange={(mode) => {
-                    setSelectedMode(mode);
-                    setShowModeSelector(false);
-                  }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Chat + Tools */}
