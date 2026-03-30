@@ -415,27 +415,39 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
             <SmartSuggestions content={lastAssistant.content} mode={mode} onSelect={handleQuickPrompt} />
           )}
 
-          {/* Skeleton loading */}
+          {/* Neural Network + Skeleton loading */}
           {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3"
+              className="flex flex-col gap-3"
             >
-              <AIAvatar isThinking size="sm" />
-              <div className="glass rounded-2xl rounded-bl-md px-5 py-4 min-w-[200px]">
-                {generatingImage ? (
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 animate-pulse" />
-                    <span className="text-xs text-muted-foreground">Creating your image...</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    <div className="h-3 w-48 bg-muted/60 rounded-full shimmer" />
-                    <div className="h-3 w-36 bg-muted/40 rounded-full shimmer" />
-                    <div className="h-3 w-52 bg-muted/50 rounded-full shimmer" />
-                  </div>
-                )}
+              <div className="flex gap-3">
+                <AIAvatar isThinking size="sm" />
+                <div className="glass rounded-2xl rounded-bl-md px-5 py-4 min-w-[200px] flex-1">
+                  {generatingImage ? (
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 animate-pulse" />
+                      <span className="text-xs text-muted-foreground">Creating your image...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {deepThink && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <span className="text-[11px] font-medium text-primary/80">Deep thinking...</span>
+                        </div>
+                      )}
+                      <div className="h-3 w-48 bg-muted/60 rounded-full shimmer" />
+                      <div className="h-3 w-36 bg-muted/40 rounded-full shimmer" />
+                      <div className="h-3 w-52 bg-muted/50 rounded-full shimmer" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Neural Network Visualization */}
+              <div className="pl-12">
+                <NeuralNetwork isActive={isLoading} className="max-w-xs h-28 opacity-60" />
               </div>
             </motion.div>
           )}
