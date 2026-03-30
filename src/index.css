@@ -415,3 +415,12 @@
   outline: 2px solid hsl(var(--ring) / 0.3);
   outline-offset: 2px;
 }
+
+/* ---- SCROLLBAR HIDE ---- */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
