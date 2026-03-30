@@ -101,6 +101,7 @@ async function readFileContents(files: File[]): Promise<string> {
 export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessagesChange }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [deepThink, setDeepThink] = useState(false);
   const [isImageMode, setIsImageMode] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -190,6 +191,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
     await streamChat({
       messages: newMessages,
       mode,
+      deepThink,
       onDelta: (chunk) => {
         assistantContent += chunk;
         setMessages((prev) => {
@@ -216,7 +218,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
         playSound("error");
       },
     });
-  }, [mode, isImageMode, attachedFiles, handleImageGeneration, setMessages, onMessagesChange]);
+  }, [mode, deepThink, isImageMode, attachedFiles, handleImageGeneration, setMessages, onMessagesChange]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
