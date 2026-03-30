@@ -1,9 +1,8 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -14,9 +13,9 @@ serve(async (req) => {
   try {
     const { prompt, size = "1024x1024", quality = "standard" } = await req.json();
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     if (!prompt || typeof prompt !== "string") {
@@ -26,25 +25,27 @@ serve(async (req) => {
       );
     }
 
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
+    // Use Lovable AI gateway with image generation model
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "dall-e-3",
-        prompt,
-        n: 1,
-        size,
-        quality,
-        response_format: "url",
+        model: "google/gemini-3-pro-image-preview",
+        messages: [
+          {
+            role: "user",
+            content: `Generate an image: ${prompt}. Make it high quality, professional, and visually stunning.`,
+          },
+        ],
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("DALL-E API error:", response.status, errorText);
+      console.error("Image generation error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(
@@ -52,13 +53,37 @@ serve(async (req) => {
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-      throw new Error(`DALL-E API returned ${response.status}: ${errorText}`);
+      throw new Error(`Image generation failed: ${response.status}`);
     }
 
     const data = await response.json();
-    const imageUrl = data.data?.[0]?.url;
-    const revisedPrompt = data.data?.[0]?.revised_prompt;
+    
+    // Extract image from response - Lovable AI image models return inline_data
+    const choice = data.choices?.[0];
+    const parts = choice?.message?.parts || [];
+    let imageUrl = "";
+    let revisedPrompt = "";
+
+    for (const part of parts) {
+      if (part.inline_data) {
+        imageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+      }
+      if (part.text) {
+        revisedPrompt = part.text;
+      }
+    }
+
+    // Fallback: check content for text response
+    if (!imageUrl && choice?.message?.content) {
+      revisedPrompt = choice.message.content;
+    }
 
     return new Response(
       JSON.stringify({ url: imageUrl, revised_prompt: revisedPrompt }),
