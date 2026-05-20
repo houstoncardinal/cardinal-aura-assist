@@ -540,11 +540,18 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
 
           <motion.div
             layout
-            className="glass-strong rounded-2xl p-2 transition-all duration-300 focus-within:shadow-lg"
+            className="relative rounded-[2rem] p-2.5 transition-all duration-300 group/dock focus-within:shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_hsl(var(--gold)/0.5)]"
+            style={{
+              background: "hsl(var(--card) / 0.85)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              WebkitBackdropFilter: "blur(28px) saturate(180%)",
+              border: "1px solid hsl(var(--gold) / 0.28)",
+              boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+            }}
           >
             {isImageMode && (
               <div className="flex items-center gap-2 px-3 pb-1">
-                <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 gap-1 h-5">
+                <Badge className="text-[10px] bg-gold/10 text-gold border-[hsl(var(--gold)/0.3)] gap-1 h-5">
                   <ImageIcon className="h-2.5 w-2.5" />
                   Image Mode
                 </Badge>
@@ -552,7 +559,7 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
             )}
 
             <div className="flex items-end gap-2">
-              <div className="flex gap-0.5 px-1 items-center">
+              <div className="flex gap-0.5 px-1 pb-1 items-center border-r border-border/40 pr-2 mr-1">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -564,8 +571,9 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-9 w-9 rounded-xl text-muted-foreground hover:text-gold-bright hover:bg-[hsl(var(--gold)/0.08)] transition-colors"
                   onClick={handleFileAttach}
+                  title="Attach files"
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
@@ -573,15 +581,17 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-8 w-8 rounded-lg transition-colors",
-                    isImageMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    "h-9 w-9 rounded-xl transition-colors",
+                    isImageMode
+                      ? "text-gold-bright bg-[hsl(var(--gold)/0.12)]"
+                      : "text-muted-foreground hover:text-gold-bright hover:bg-[hsl(var(--gold)/0.08)]"
                   )}
                   onClick={() => setIsImageMode(!isImageMode)}
+                  title="Image generation"
                 >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
                 <VoiceInput onTranscript={(t) => setInput(t)} disabled={isLoading} />
-                <DeepThinkToggle enabled={deepThink} onToggle={() => setDeepThink(!deepThink)} disabled={isLoading} />
               </div>
 
               <Textarea
@@ -589,27 +599,34 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isImageMode ? "Describe the image you want to create..." : "Ask Cardinal GPT anything..."}
-                className="min-h-[44px] max-h-[160px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-2 text-sm"
+                placeholder={isImageMode ? "Describe the image you want to create..." : "What intelligence do you require?"}
+                className="min-h-[48px] max-h-[180px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-2 text-sm sm:text-base placeholder:text-muted-foreground/40"
                 rows={1}
               />
 
-              <div className="px-1 pb-0.5">
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  size="icon"
-                  className="h-9 w-9 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
-                </Button>
+              <div className="flex items-center gap-2 px-1 pb-1">
+                <DeepThinkToggle enabled={deepThink} onToggle={() => setDeepThink(!deepThink)} disabled={isLoading} />
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }}>
+                  <Button
+                    onClick={handleSend}
+                    disabled={!input.trim() || isLoading}
+                    size="icon"
+                    className="h-11 w-11 rounded-full text-[hsl(var(--noir))] border-0 disabled:opacity-40 disabled:saturate-50"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-bright)) 100%)",
+                      boxShadow: "0 0 24px hsl(var(--gold) / 0.4)",
+                    }}
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-5 w-5" strokeWidth={2.5} />}
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </motion.div>
 
-          <div className="flex items-center justify-center gap-3 mt-2.5">
-            <p className="text-[10px] text-muted-foreground/60">
-              Cardinal GPT • Enterprise AI Platform
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <p className="text-[9px] text-muted-foreground/50 uppercase tracking-[0.25em]">
+              Proprietary LLM Platform • Cardinal GPT
             </p>
           </div>
         </div>
@@ -617,3 +634,4 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
     </div>
   );
 }
+
