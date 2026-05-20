@@ -176,16 +176,20 @@ export function ChatLayout({ children }: ChatLayoutProps) {
       <div className="p-4 pb-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl glass glow-border flex items-center justify-center">
-              <span className="font-display font-bold text-sm">C</span>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-[hsl(var(--noir))]"
+              style={{ background: "linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-bright)) 100%)" }}
+            >
+              <span className="font-display text-xl leading-none">C</span>
             </div>
             <div>
-              <h1 className="text-base font-display font-bold tracking-tight">Cardinal</h1>
-              <p className="text-[10px] text-muted-foreground -mt-0.5">GPT Platform</p>
+              <h1 className="text-sm font-semibold tracking-[0.2em] uppercase text-gold-bright">Cardinal</h1>
+              <p className="text-[10px] text-muted-foreground/70 -mt-0.5 tracking-widest uppercase">Intelligence</p>
             </div>
           </div>
           <ThemeToggle />
         </div>
+
 
         <div className="space-y-2">
           <Button
