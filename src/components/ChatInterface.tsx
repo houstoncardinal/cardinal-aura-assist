@@ -435,9 +435,10 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                     className={cn(
                       "rounded-2xl px-4 py-3 sm:px-5 sm:py-4 transition-all duration-200",
                       message.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
+                        ? "bg-[hsl(var(--card))] border border-[hsl(var(--gold)/0.25)] text-foreground rounded-br-md"
                         : "glass rounded-bl-md"
                     )}
+
                   >
                     <MessageContent
                       content={message.content}
