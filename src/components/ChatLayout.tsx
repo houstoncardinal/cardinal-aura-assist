@@ -176,31 +176,38 @@ export function ChatLayout({ children }: ChatLayoutProps) {
       <div className="p-4 pb-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl glass glow-border flex items-center justify-center">
-              <span className="font-display font-bold text-sm">C</span>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-[hsl(var(--noir))]"
+              style={{ background: "linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-bright)) 100%)" }}
+            >
+              <span className="font-display text-xl leading-none">C</span>
             </div>
             <div>
-              <h1 className="text-base font-display font-bold tracking-tight">Cardinal</h1>
-              <p className="text-[10px] text-muted-foreground -mt-0.5">GPT Platform</p>
+              <h1 className="text-sm font-semibold tracking-[0.2em] uppercase text-gold-bright">Cardinal</h1>
+              <p className="text-[10px] text-muted-foreground/70 -mt-0.5 tracking-widest uppercase">Intelligence</p>
             </div>
           </div>
           <ThemeToggle />
         </div>
 
+
         <div className="space-y-2">
           <Button
-            className="w-full justify-start gap-2 h-10 rounded-xl glass-subtle hover:bg-primary/10 border-0 transition-all group"
-            variant="outline"
+            className="w-full justify-center gap-2 h-11 rounded-xl font-semibold text-[hsl(var(--noir))] border-0 transition-all duration-300 hover:brightness-110"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-bright)) 100%)",
+              boxShadow: "0 0 20px hsl(var(--gold) / 0.25)",
+            }}
             onClick={handleNewConversation}
           >
-            <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
-            <span className="text-sm">New Chat</span>
+            <Plus className="h-4 w-4" />
+            <span className="text-sm">New Dialogue</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-xs text-muted-foreground h-8 rounded-lg"
+            className="w-full justify-start text-xs text-muted-foreground h-8 rounded-lg hover:bg-[hsl(var(--gold)/0.06)]"
             onClick={() => setCommandOpen(true)}
           >
             <Search className="mr-2 h-3 w-3" />
@@ -208,6 +215,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
             <kbd className="ml-auto glass-subtle rounded px-1.5 py-0.5 text-[9px] font-mono">⌘K</kbd>
           </Button>
         </div>
+
       </div>
 
       {/* Divider */}
