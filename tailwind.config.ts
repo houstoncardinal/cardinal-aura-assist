@@ -19,8 +19,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
-        display: ["Space Grotesk", "Inter", "sans-serif"],
+        sans: ["Work Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        display: ["Instrument Serif", "Times New Roman", "serif"],
+        serif: ["Instrument Serif", "Times New Roman", "serif"],
         mono: ["JetBrains Mono", "Consolas", "monospace"],
       },
       colors: {
