@@ -278,85 +278,137 @@ export function ChatInterface({ mode, toolPrompt, messages, setMessages, onMessa
                 key="welcome"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4 }}
-                className="h-full flex items-center justify-center px-2 sm:px-4 py-12 sm:py-20"
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.45 }}
+                className="px-2 sm:px-4 pt-6 sm:pt-10 pb-4"
               >
-                <div className="max-w-xl w-full text-center space-y-8 relative">
-                  {/* Aurora effect */}
-                  <div className="aurora" />
+                <div className="max-w-5xl w-full mx-auto relative">
+                  {/* Aurora */}
+                  <div className="aurora opacity-70" />
 
-                  {/* Logo orb */}
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                    className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto"
-                  >
-                    <div className="absolute inset-0 rounded-3xl bg-primary/5 animate-pulse-soft" />
-                    <div className="absolute inset-2 glass rounded-2xl flex items-center justify-center glow-border">
-                      <ModeIcon className="h-10 w-10 sm:h-12 sm:w-12 text-foreground/80" />
-                    </div>
-                  </motion.div>
+                  {/* Hero — Neural Constellation + serif title */}
+                  <div className="relative flex flex-col items-center text-center pt-6 sm:pt-10 pb-10 sm:pb-14">
+                    <motion.div
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.05, type: "spring", stiffness: 180, damping: 18 }}
+                      className="mb-6 sm:mb-8"
+                    >
+                      <ConstellationAvatar size={132} />
+                    </motion.div>
 
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="space-y-3"
-                  >
-                    <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-4 py-1.5 mb-3">
-                      <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
-                      <span className="text-xs font-medium text-muted-foreground">{getModeName(mode)} Mode</span>
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight font-display">
+                    <motion.div
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.18, duration: 0.55 }}
+                      className="inline-flex items-center gap-2 glass-subtle rounded-full px-3.5 py-1 mb-5"
+                    >
+                      <div className="size-1.5 rounded-full bg-gold animate-pulse" />
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold">
+                        {getModeName(mode)} • Live
+                      </span>
+                    </motion.div>
+
+                    <motion.h1
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.22, duration: 0.6 }}
+                      className="font-display italic text-5xl sm:text-6xl lg:text-7xl leading-[1.02] text-gold-bright mb-4"
+                    >
                       Cardinal GPT
-                    </h1>
-                    <p className="text-muted-foreground text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
-                      Enterprise AI workspace. Generate text, images, and insights with industry-tuned intelligence.
-                    </p>
-                  </motion.div>
+                    </motion.h1>
 
-                  {/* Quick action cards */}
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.32, duration: 0.5 }}
+                      className="max-w-xl text-sm sm:text-base text-foreground/55 font-light leading-relaxed"
+                    >
+                      Sophisticated intelligence for the modern enterprise. Navigate the complexity of industry data with cinematic precision.
+                    </motion.p>
+                  </div>
+
+                  {/* Bento Grid — high-density editorial */}
                   <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="grid grid-cols-2 gap-2 sm:gap-3 pt-4 max-w-md mx-auto"
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.42, duration: 0.6 }}
+                    className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 pb-4"
                   >
-                    {(quickPromptsByMode[mode] || quickPromptsByMode.general).map((prompt, i) => (
-                      <motion.button
-                        key={prompt.text}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 + i * 0.08 }}
-                        whileHover={{ scale: 1.03, y: -2 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleQuickPrompt(prompt.text)}
-                        className="glass-card group p-3 sm:p-4 rounded-xl text-left"
-                      >
-                        <span className="text-xl sm:text-2xl block mb-2">{prompt.icon}</span>
-                        <span className="text-xs sm:text-sm font-medium text-foreground/90 block">{prompt.label}</span>
-                        <span className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 mt-0.5">{prompt.text}</span>
-                      </motion.button>
-                    ))}
+                    {(() => {
+                      const prompts = quickPromptsByMode[mode] || quickPromptsByMode.general;
+                      // 4 cards mapped to bento slots
+                      const spans = [
+                        "sm:col-span-4 sm:row-span-2 min-h-[220px] sm:min-h-[280px]",
+                        "sm:col-span-8 min-h-[120px]",
+                        "sm:col-span-4 min-h-[120px]",
+                        "sm:col-span-4 min-h-[120px]",
+                      ];
+                      const labels = ["Intelligent Synthesis", "Creative Engine", "Deep Analysis", "Visual Studio"];
+                      return prompts.slice(0, 4).map((p, i) => (
+                        <motion.button
+                          key={p.text}
+                          initial={{ opacity: 0, y: 14 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 + i * 0.07, duration: 0.45 }}
+                          whileHover={{ y: -3 }}
+                          whileTap={{ scale: 0.985 }}
+                          onClick={() => handleQuickPrompt(p.text)}
+                          className={cn(
+                            "group relative overflow-hidden text-left rounded-3xl p-5 sm:p-7 transition-all duration-300",
+                            "bg-card border border-[hsl(var(--gold)/0.12)] hover:border-[hsl(var(--gold)/0.5)]",
+                            "hover:shadow-[0_18px_50px_hsl(var(--gold)/0.08)]",
+                            spans[i]
+                          )}
+                        >
+                          {/* Inner gold shimmer on hover */}
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                               style={{ background: "radial-gradient(circle at 80% 0%, hsl(var(--gold) / 0.08), transparent 60%)" }} />
+
+                          {i === 0 ? (
+                            <div className="relative h-full flex flex-col justify-end">
+                              <div className="absolute top-0 right-0 text-7xl sm:text-8xl opacity-15 group-hover:opacity-90 transition-opacity duration-500 leading-none">
+                                {p.icon}
+                              </div>
+                              <span className="text-[10px] font-bold text-gold tracking-[0.3em] uppercase mb-2">{labels[i]}</span>
+                              <h3 className="font-display text-2xl sm:text-3xl text-foreground mb-2 leading-tight">{p.label}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">{p.text}</p>
+                            </div>
+                          ) : (
+                            <div className="relative h-full flex items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-bold text-gold tracking-[0.3em] uppercase mb-1.5 block">{labels[i]}</span>
+                                <h3 className="font-display text-xl sm:text-2xl text-foreground mb-1 leading-tight truncate">{p.label}</h3>
+                                <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-2">{p.text}</p>
+                              </div>
+                              <div className="size-12 sm:size-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 border border-[hsl(var(--gold)/0.3)]"
+                                   style={{ background: "linear-gradient(135deg, hsl(var(--card)), hsl(var(--gold) / 0.12))" }}>
+                                {p.icon}
+                              </div>
+                            </div>
+                          )}
+                        </motion.button>
+                      ));
+                    })()}
                   </motion.div>
 
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="flex items-center justify-center gap-4 pt-2"
+                    transition={{ delay: 0.9 }}
+                    className="flex items-center justify-center gap-4 pt-2 pb-2"
                   >
                     <kbd className="glass-subtle rounded-lg px-2.5 py-1 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
-                    <span className="text-[10px] text-muted-foreground">Command palette</span>
+                    <span className="text-[10px] text-muted-foreground tracking-wide">Command palette</span>
+                    <span className="text-muted-foreground/30">·</span>
                     <kbd className="glass-subtle rounded-lg px-2.5 py-1 text-[10px] font-mono text-muted-foreground">?</kbd>
-                    <span className="text-[10px] text-muted-foreground">Shortcuts</span>
+                    <span className="text-[10px] text-muted-foreground tracking-wide">Shortcuts</span>
                   </motion.div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+
 
           {/* Messages */}
           <AnimatePresence mode="popLayout">
