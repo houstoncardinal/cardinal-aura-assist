@@ -12,6 +12,7 @@ import { IndustryMode, getModeName, getModeIcon } from "./ModeSelector";
 import { MessageContent } from "./MessageContent";
 import { MessageActions } from "./MessageActions";
 import { AIAvatar } from "./AIAvatar";
+import { ConstellationAvatar } from "./ConstellationAvatar";
 import { VoiceInput } from "./VoiceInput";
 import { SmartSuggestions } from "./SmartSuggestions";
 import { NeuralNetwork } from "./NeuralNetwork";
